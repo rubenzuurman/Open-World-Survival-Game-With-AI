@@ -1,3 +1,4 @@
+import json
 import math
 import os
 import random as rnd
@@ -19,6 +20,29 @@ def load_tiles():
     # Return dict.
     return tile_textures
 
+def load_entities():
+    # Initialize entities dict and file list.
+    entity_library = {}
+    entities_filenames = os.listdir("res/entities/")
+    
+    # Load files into dict.
+    for filename in entities_filenames:
+        if not filename.endswith(".entity"):
+            continue
+        with open(f"res/entities/{filename}", "r") as file:
+            properties = json.loads(file.read())
+        entity_id = properties["entity_id"]
+        entity_name = properties["entity_name"]
+        entity_texture_filename = properties["texture_filename"]
+        entity_texture = \
+            pygame.image.load(f"res/entities/{entity_texture_filename}")\
+            .convert_alpha()
+        
+        entity_library[entity_id] = [entity_name, entity_texture]
+    
+    # Return dict.
+    return entity_library
+
 def render_text(display, text, position, font, color=(255, 255, 255)):
     text_surface = font.render(text, False, color)
     display.blit(text_surface, position)
@@ -34,11 +58,14 @@ def start(world, window_dimensions):
     # Create display.
     display = pygame.display.set_mode(window_dimensions, \
         flags=pygame.HWSURFACE | pygame.DOUBLEBUF)
-    pygame.display.set_caption("Game")
+    pygame.display.set_caption("Game - Version 0.0.1")
     window_middle = (window_dimensions[0] // 2, window_dimensions[1] // 2)
     
     # Load tiles.
     tile_textures = load_tiles()
+    
+    # Load entities.
+    entity_library = load_entities()
     
     # Create clock.
     clock = pygame.time.Clock()
@@ -115,12 +142,16 @@ def start(world, window_dimensions):
         display.fill((0, 0, 0))
         
         # Render world.
-        rendered_tiles = world.render(display, camera, window_dimensions, \
-            tile_textures)
+        rendered_tiles = world.render_tiles(display, camera, \
+            window_dimensions, tile_textures)
+        rendered_entities = world.render_entities(display, camera, \
+            window_dimensions, entity_library)
         
         # Render debug text.
         render_text(display, f"Rendered tiles: {rendered_tiles}", (10, 10), \
             font)
+        render_text(display, f"Rendered entities: {rendered_entities}", \
+            (10, 30), font)
         
         # Update display.
         pygame.display.flip()
