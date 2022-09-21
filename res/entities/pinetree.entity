@@ -1,5 +1,6 @@
 {
     "entity_id": 1,
     "entity_name": "Pine Tree",
-    "texture_filename": "textures/pinetree.png"
+    "texture_filename": "textures/pine_trees/Tree - Pine Snow 04.png",
+    "scale": 1.8
 }

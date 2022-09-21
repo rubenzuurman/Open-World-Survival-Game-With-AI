@@ -19,6 +19,7 @@ The `res/entities/` folder should contain files named `<anything>.entity` contai
     - Entity ID
     - Entity name
     - Texture filename
+    - Scale (the factor with which the texture should be scaled)
     - Hitbox(es) for when other entities move (in the future)
     - Hitbox(es) for when tools are used in the vicinity (in the furture)
     - Suitable tools for harvesting this entity (in the future)

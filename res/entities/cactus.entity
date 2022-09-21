@@ -1,5 +1,6 @@
 {
     "entity_id": 0,
     "entity_name": "Cactus",
-    "texture_filename": "textures/cactus.png"
+    "texture_filename": "textures/cactus.png",
+    "scale": 1.0
 }

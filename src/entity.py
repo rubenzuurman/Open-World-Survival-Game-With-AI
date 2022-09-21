@@ -12,7 +12,7 @@ class Entity:
         self.entity_id = Entity.NEXT_ENTITY_ID
         Entity.NEXT_ENTITY_ID += 1
         self.library_id = library_id
-        self.position = position
+        self.position = list(position)
     
     def update(self, entities):
         pass

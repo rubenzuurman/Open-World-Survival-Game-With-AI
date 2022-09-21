@@ -1,5 +1,6 @@
 {
     "entity_id": 2,
     "entity_name": "Jungle Tree",
-    "texture_filename": "textures/jungletree.png"
+    "texture_filename": "textures/jungletree.png",
+    "scale": 1.0
 }

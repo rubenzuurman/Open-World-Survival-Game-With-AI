@@ -27,17 +27,31 @@ def load_entities():
     
     # Load files into dict.
     for filename in entities_filenames:
+        # Skip non-entity files.
         if not filename.endswith(".entity"):
             continue
+        
+        # Load entity properties.
         with open(f"res/entities/{filename}", "r") as file:
             properties = json.loads(file.read())
-        entity_id = properties["entity_id"]
+        
+        # Load entity id and name.
+        entity_id   = properties["entity_id"]
         entity_name = properties["entity_name"]
+        
+        # Load entity texture.
         entity_texture_filename = properties["texture_filename"]
         entity_texture = \
             pygame.image.load(f"res/entities/{entity_texture_filename}")\
             .convert_alpha()
         
+        # Scale texture.
+        entity_scale = properties["scale"]
+        entity_texture = pygame.transform.scale(entity_texture, \
+            (entity_texture.get_width() * entity_scale, \
+                entity_texture.get_height() * entity_scale))
+        
+        # Set entity library entry.
         entity_library[entity_id] = [entity_name, entity_texture]
     
     # Return dict.

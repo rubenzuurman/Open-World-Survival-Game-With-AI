@@ -19,7 +19,17 @@ class World:
             number=200)
     
     def add_entity(self, entity):
-        self.entities.append(entity)
+        # Determine position in the list for correct rendering (top to bottom).
+        entity_added = False
+        for index, e in enumerate(self.entities):
+            if entity.position[1] > e.position[1]:
+                self.entities.insert(index, entity)
+                entity_added = True
+                break
+        
+        # Add entity to the end of the list if it's the bottom most entity.
+        if not entity_added:
+            self.entities.append(entity)
     
     def generate_world_tiles(self, map_size):
         """
@@ -93,7 +103,17 @@ class World:
                 entity = Entity(0, position_shifted)
             
             # Add entity to list.
-            entities.append(entity)
+            # Determine position in the list for correct rendering (top to bottom).
+            entity_added = False
+            for index, e in enumerate(entities):
+                if entity.position[1] > e.position[1]:
+                    entities.insert(index, entity)
+                    entity_added = True
+                    break
+            
+            # Add entity to the end of the list if it's the bottom most entity.
+            if not entity_added:
+                entities.append(entity)
         
         # Return entities.
         return entities
