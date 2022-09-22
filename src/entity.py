@@ -14,7 +14,10 @@ class Entity:
         self.library_id = library_id
         self.position = list(position)
     
-    def update(self, entities):
+    def update(self, delta_time, entities):
+        """
+        Can be overridden by child classes.
+        """
         pass
     
     def render(self, display, camera, window_dimensions, entity_library):
@@ -39,3 +42,23 @@ class Entity:
         # Render texture.
         display.blit(texture, (screen_x, screen_y))
         return True
+
+class Player(Entity):
+    
+    def __init__(self, position=(0, 0), name=""):
+        # Initialize superclass.
+        super().__init__(3, position)
+        
+        # Set member variables.
+        self.name = "Player" if name == "" else name
+        self.velocity = [0, 0]
+        self.camera_locked = True
+    
+    def update(self, delta_time, entities=[]):
+        # Update position using velocity and delta time.
+        self.position[0] += self.velocity[0] * delta_time
+        self.position[1] += self.velocity[1] * delta_time
+    
+    def set_velocity(self, velocity):
+        # Update velocity.
+        self.velocity = velocity

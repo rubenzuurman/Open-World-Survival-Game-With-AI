@@ -1,0 +1,6 @@
+{
+    "entity_id": 3,
+    "entity_name": "Player",
+    "texture_filename": "textures/Characters/player.png",
+    "scale": 2
+}

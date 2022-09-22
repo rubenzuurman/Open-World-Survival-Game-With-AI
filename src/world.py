@@ -3,7 +3,7 @@ import random as rnd
 
 import pygame
 
-from entity import Entity
+from entity import Entity, Player
 
 class World:
     
@@ -14,9 +14,12 @@ class World:
         # Generate map tiles.
         self.tiles = self.generate_world_tiles(map_size)
         
-        # Generate entities.
-        self.entities = self.generate_world_entities(map_size, tile_size=64, \
-            number=200)
+        # Generate static entities.
+        self.entities = self.generate_world_entities(map_size, \
+            tile_size=64, number=500)
+        
+        # Create player.
+        self.player = Player(position=(0, 0), name="Harry")
     
     def add_entity(self, entity):
         # Determine position in the list for correct rendering (top to bottom).
@@ -118,6 +121,10 @@ class World:
         # Return entities.
         return entities
     
+    def update_entities(self, delta_time):
+        # Update player.
+        self.player.update(delta_time)
+    
     def render_tiles(self, display, camera, window_dimensions, tile_textures):
         # Set tile size (for debug purposes).
         tile_size = 64
@@ -143,9 +150,6 @@ class World:
                         (tile_x, tile_y, tile_size, tile_size), 1)
                 rendered_tiles += 1
         
-        pygame.draw.circle(display, (0, 255, 100), \
-            (window_dimensions[0] / 2, window_dimensions[1] / 2), 20)
-        
         # Return the number of tiles rendered.
         return rendered_tiles
     
@@ -154,8 +158,22 @@ class World:
         # Keep track of the number of entities rendered.
         rendered_entities = 0
         
+        # Construct list of moveable entities.
+        moveable_entities = [self.player]
+        
         # Render entities.
         for entity in self.entities:
+            # Check if a moveable entity needs to be rendered.
+            success = False
+            if not len(moveable_entities) == 0 \
+                and moveable_entities[0].position[1] > entity.position[1]:
+                success = moveable_entities[0].render(display, camera, \
+                    window_dimensions, entity_library)
+                del moveable_entities[0]
+            if success:
+                rendered_entities += 1
+            
+            # Render entity.
             success = entity.render(display, camera, window_dimensions, \
                 entity_library)
             if success:

@@ -72,7 +72,7 @@ def start(world, window_dimensions):
     # Create display.
     display = pygame.display.set_mode(window_dimensions, \
         flags=pygame.HWSURFACE | pygame.DOUBLEBUF)
-    pygame.display.set_caption("Game - Version 0.0.1")
+    pygame.display.set_caption("Game - Version 0.0.2")
     window_middle = (window_dimensions[0] // 2, window_dimensions[1] // 2)
     
     # Load tiles.
@@ -91,6 +91,9 @@ def start(world, window_dimensions):
     
     # Initialize camera control keys [w, a, s, d, lshift].
     move_keys_pressed = [False, False, False, False, False]
+    
+    # Time keeping variable for world update.
+    last_update = 0
     
     # Start main loop.
     running = True
@@ -132,25 +135,60 @@ def start(world, window_dimensions):
                 
                 if event.key == pygame.K_LSHIFT:
                     move_keys_pressed[4] = False
+                
+                if event.key == pygame.K_SPACE:
+                    world.player.camera_locked = not world.player.camera_locked
         
-        # Update camera position.
-        camera_velocity_x = 0
-        camera_velocity_y = 0
-        if move_keys_pressed[0]:
-            camera_velocity_y -= camera_velocity
-        if move_keys_pressed[1]:
-            camera_velocity_x -= camera_velocity
-        if move_keys_pressed[2]:
-            camera_velocity_y += camera_velocity
-        if move_keys_pressed[3]:
-            camera_velocity_x += camera_velocity
-        
-        if move_keys_pressed[4]:
-            camera[0] += camera_velocity_x * 4
-            camera[1] += camera_velocity_y * 4
+        # Check if the camera is locked to the player.
+        if world.player.camera_locked:
+            # Get player velocity from input.
+            player_velocity = 200
+            player_vel_x = 0
+            player_vel_y = 0
+            if move_keys_pressed[0]:
+                player_vel_y += player_velocity
+            if move_keys_pressed[1]:
+                player_vel_x -= player_velocity
+            if move_keys_pressed[2]:
+                player_vel_y -= player_velocity
+            if move_keys_pressed[3]:
+                player_vel_x += player_velocity
+            
+            # Set player velocity.
+            world.player.set_velocity([player_vel_x, player_vel_y])
+            
+            # Set camera position to player position.
+            camera = [world.player.position[0], -world.player.position[1]]
         else:
-            camera[0] += camera_velocity_x
-            camera[1] += camera_velocity_y
+            # Update camera position.
+            camera_velocity_x = 0
+            camera_velocity_y = 0
+            if move_keys_pressed[0]:
+                camera_velocity_y -= camera_velocity
+            if move_keys_pressed[1]:
+                camera_velocity_x -= camera_velocity
+            if move_keys_pressed[2]:
+                camera_velocity_y += camera_velocity
+            if move_keys_pressed[3]:
+                camera_velocity_x += camera_velocity
+            
+            if move_keys_pressed[4]:
+                camera[0] += camera_velocity_x * 4
+                camera[1] += camera_velocity_y * 4
+            else:
+                camera[0] += camera_velocity_x
+                camera[1] += camera_velocity_y
+        
+        # Calculate delta time.
+        current_time = time.time_ns()
+        if last_update == 0:
+            last_update = current_time
+            continue
+        delta_time = (current_time - last_update) * 1e-9
+        last_update = current_time
+        
+        # Update world.
+        world.update_entities(delta_time)
         
         # Fill display with black.
         display.fill((0, 0, 0))
@@ -158,14 +196,16 @@ def start(world, window_dimensions):
         # Render world.
         rendered_tiles = world.render_tiles(display, camera, \
             window_dimensions, tile_textures)
+        loaded_tiles = world.map_size * world.map_size
         rendered_entities = world.render_entities(display, camera, \
             window_dimensions, entity_library)
+        loaded_entities = len(world.entities)
         
         # Render debug text.
-        render_text(display, f"Rendered tiles: {rendered_tiles}", (10, 10), \
-            font)
-        render_text(display, f"Rendered entities: {rendered_entities}", \
-            (10, 30), font)
+        render_text(display, f"Rendered tiles: {rendered_tiles}" \
+            f"/{loaded_tiles}", (10, 10), font)
+        render_text(display, f"Rendered entities: {rendered_entities}" \
+            f"/{loaded_entities}", (10, 30), font)
         
         # Update display.
         pygame.display.flip()
