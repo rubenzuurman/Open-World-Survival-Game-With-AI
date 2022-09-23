@@ -72,7 +72,7 @@ def start(world, window_dimensions):
     # Create display.
     display = pygame.display.set_mode(window_dimensions, \
         flags=pygame.HWSURFACE | pygame.DOUBLEBUF)
-    pygame.display.set_caption("Game - Version 0.0.2")
+    pygame.display.set_caption("Game - Version 0.0.3")
     window_middle = (window_dimensions[0] // 2, window_dimensions[1] // 2)
     
     # Load tiles.
@@ -215,3 +215,6 @@ def start(world, window_dimensions):
     
     # Quit pygame.
     pygame.quit()
+    
+    # Save world.
+    world.serialize("saves")

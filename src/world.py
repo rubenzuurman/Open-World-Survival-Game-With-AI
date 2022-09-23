@@ -1,4 +1,6 @@
 import math
+import os
+import pickle
 import random as rnd
 
 import pygame
@@ -7,19 +9,53 @@ from entity import Entity, Player
 
 class World:
     
-    def __init__(self, map_size):
+    def __init__(self, world_name, map_size, load_existing=False):
+        # Set world name (used for saving).
+        self.world_name = world_name
+        
+        # Check if the world name is valid.
+        self.verify_world_name(world_name)
+        
         # Set map size.
         self.map_size = map_size
         
-        # Generate map tiles.
-        self.tiles = self.generate_world_tiles(map_size)
+        # Check if the map size is not negative or zero.
+        if not map_size >= 10:
+            raise ValueError("Map size must be greater than or equal to 10.")
+        if not isinstance(map_size, int):
+            raise TypeError("Map size must be an integer.")
         
-        # Generate static entities.
-        self.entities = self.generate_world_entities(map_size, \
-            tile_size=64, number=500)
+        # Load existing world or generate new world.
+        if load_existing:
+            result = self.deserialize("saves", world_name)
+            if not result:
+                raise Exception("An error occured while loading the world.")
+        else:
+            result = self.generate(map_size=map_size, num_of_entities=500)
+            if not result:
+                raise Exception("An error occured while generating the world.")
+    
+    def verify_world_name(self, world_name):
+        # Check if the world name is a string.
+        if not isinstance(world_name, str):
+            raise ValueError("World name must be a string.")
         
-        # Create player.
-        self.player = Player(position=(0, 0), name="Harry")
+        # Check if the world name is longer than 0 characters but no longer 
+        # than 250 characters.
+        if not (len(world_name) > 0 and len(world_name) <= 250):
+            raise ValueError("World name must contain at least 1 character " \
+                "and at most 250.")
+        
+        # Check if the world name only contains alphabetical characters and 
+        # numbers.
+        if not world_name.isalnum():
+            raise ValueError("World name can only contain alphabetical " \
+                "characters and numbers.")
+        
+        # Check if the world name start with an alphabetical character.
+        if not world_name[0].isalpha():
+            raise ValueError("World name must start with an alphabetical " \
+                "character.")
     
     def add_entity(self, entity):
         # Determine position in the list for correct rendering (top to bottom).
@@ -33,6 +69,27 @@ class World:
         # Add entity to the end of the list if it's the bottom most entity.
         if not entity_added:
             self.entities.append(entity)
+    
+    def generate(self, map_size, num_of_entities):
+        """
+        Generates tiles, entities, and a player.
+        """
+        try:
+            # Generate map tiles.
+            self.tiles = self.generate_world_tiles(map_size)
+            
+            # Generate static entities.
+            self.entities = self.generate_world_entities(map_size, \
+                tile_size=64, num_of_entities=num_of_entities)
+            
+            # Create player.
+            self.player = Player(position=(0, 0), name="Harry")
+            
+            return True
+        except Exception as e:
+            print(f"Generating of the world with name '{self.world_name}' " \
+                f"failed: {e}.")
+            return False
     
     def generate_world_tiles(self, map_size):
         """
@@ -66,16 +123,17 @@ class World:
         # Return tiles.
         return tiles
     
-    def generate_world_entities(self, map_size, tile_size, number=100):
+    def generate_world_entities(self, map_size, tile_size, \
+        num_of_entities=100):
         """
-        Generates entities list of size number based on tile ids.
+        Generates entities list of size num_of_entities based on tile ids.
         """
         # Initialize entities list.
         entities = []
         
         # Generate unique random positions.
         positions = []
-        for _ in range(number):
+        for _ in range(num_of_entities):
             x = rnd.randint(tile_size * 2, (map_size - 2) * tile_size)
             y = rnd.randint(tile_size * 2, (map_size - 2) * tile_size)
             while (x, y) in positions:
@@ -181,3 +239,39 @@ class World:
         
         # Return the number of entities rendered.
         return rendered_entities
+    
+    def serialize(self, path):
+        # Create save folder if it does not yet exist.
+        save_folder = os.path.join(path, self.world_name)
+        if not os.path.isdir(save_folder):
+            os.mkdir(save_folder)
+        
+        # Pickle the world.
+        with open(os.path.join(save_folder, "save.pickle"), "wb") as file:
+            pickle.dump(self, file)
+    
+    def deserialize(self, path, world_name):
+        # Construct save path.
+        save_folder = os.path.join(path, world_name)
+        save_path = os.path.join(save_folder, "save.pickle")
+        
+        # Check if the save exists.
+        if not os.path.exists(save_path):
+            print(f"No save file exists for world with name '{world_name}'.")
+            return False
+        
+        try:
+            # Load the world.
+            with open(save_path, "rb") as file:
+                loaded_world = pickle.load(file)
+        
+            # Set member variables.
+            self.world_name = world_name
+            self.map_size = loaded_world.map_size
+            self.tiles = loaded_world.tiles
+            self.entities = loaded_world.entities
+            self.player = loaded_world.player
+            return True
+        except Exception as e:
+            print(f"Loading of save with name '{world_name}' failed: {e}.")
+            return False
