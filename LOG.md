@@ -1,5 +1,9 @@
 # Log
 
+## 28-09-2022
+*14.30* Added extra check to entity generation in case the map size is less than 4 and the random integer range would be incorrect. Changes range for tile generation to start at 0 instead of 1 to ensure the map would be n x n instead of n x n-1.
+*14.46* Fixed a bug where moveable entities would not get rendered if they were below all static entities.
+
 ## 23-09-2022
 *14.43* Added issue #1 about lag when rendering worlds with many tiles.
 *15.17* Added `load_existing` parameter to the world init function, if this parameter is equal to true it will try to load an existing world with the specified world name, if it is equal to false it will generate a new world using the map size specified.

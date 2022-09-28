@@ -7,6 +7,27 @@ import pygame
 
 from entity import Entity, Player
 
+"""
+How to implement structures with entrances:
+    - New list in world called structures.
+    - Structures have structure_id, structure_name, texture_filename, 
+        entrance_hitbox, collision_hitboxes. Structures also have their own 
+        world specified by an id.
+    - When a structure is added, a destination world id must be specified for 
+        its entrance, this is the world the entrance leads to.
+    - When a structure is added, its collision hitboxes are added to the 
+        collision_hitboxes list, and its entrance is added to the entrances 
+        list.
+    - Question: how is the destination world specified?
+        - Choose ground type
+        - Add list of entity tuples with entity id, position (can be none for 
+            random). (this will probably require me to separate the types of 
+            entities in the future to make sure the dynamic entities can move.)
+        - Add list of structures with structure id, position, destination.
+    Maybe another world class with different generate functions, or add 
+        arguments to this world class.
+"""
+
 class World:
     
     def __init__(self, world_name, map_size, load_existing=False):
@@ -20,8 +41,8 @@ class World:
         self.map_size = map_size
         
         # Check if the map size is not negative or zero.
-        if not map_size >= 10:
-            raise ValueError("Map size must be greater than or equal to 10.")
+        if not map_size >= 1:
+            raise ValueError("Map size must be greater than or equal to 1.")
         if not isinstance(map_size, int):
             raise TypeError("Map size must be an integer.")
         
@@ -31,7 +52,7 @@ class World:
             if not result:
                 raise Exception("An error occured while loading the world.")
         else:
-            result = self.generate(map_size=map_size, num_of_entities=500)
+            result = self.generate(map_size=map_size, num_of_entities=10)
             if not result:
                 raise Exception("An error occured while generating the world.")
     
@@ -99,7 +120,7 @@ class World:
         tiles = []
         
         # Add tile rows based on latitude.
-        for latitude in range(1, map_size):
+        for latitude in range(0, map_size):
             # Sine based sample method.
             sample = math.sin(math.pi * latitude / map_size)
             
@@ -134,11 +155,17 @@ class World:
         # Generate unique random positions.
         positions = []
         for _ in range(num_of_entities):
-            x = rnd.randint(tile_size * 2, (map_size - 2) * tile_size)
-            y = rnd.randint(tile_size * 2, (map_size - 2) * tile_size)
+            if map_size <= 3:
+                rand_min = 0
+                rand_max = tile_size * map_size
+            else:
+                rand_min = tile_size * 1
+                rand_max = (map_size - 1) * tile_size
+            x = rnd.randint(rand_min, rand_max)
+            y = rnd.randint(rand_min, rand_max)
             while (x, y) in positions:
-                x = rnd.randint(tile_size * 2, (map_size - 2) * tile_size)
-                y = rnd.randint(tile_size * 2, (map_size - 2) * tile_size)
+                x = rnd.randint(rand_min, rand_max)
+                y = rnd.randint(rand_min, rand_max)
             positions.append((x, y))
         
         # Determine vegetation type and spawn vegetation.
@@ -151,6 +178,11 @@ class World:
             # Get tile id of the base tile.
             map_x = int(position[0] / tile_size)
             map_y = int(position[1] / tile_size)
+            # Increment tile position y if able to, this ensures correct 
+            # entities on the tiles. The last couple rows are snow anyway so 
+            # this won't produce weird things.
+            if map_y < len(self.tiles) - 1:
+                map_y += 1
             tile_id = self.tiles[map_y][map_x]
             
             # Snow biome.
@@ -236,6 +268,10 @@ class World:
                 entity_library)
             if success:
                 rendered_entities += 1
+        
+        # Render remaining moveable entities that are below all static entities.
+        for entity in moveable_entities:
+            entity.render(display, camera, window_dimensions, entity_library)
         
         # Return the number of entities rendered.
         return rendered_entities
